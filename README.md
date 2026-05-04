@@ -25,7 +25,7 @@ CareerCatalyst was developed to replace a manual workflow with an intuitive, cen
 - **Visual Analytics**: 
   - **Scatter Graph**: Visualize your job opportunities based on competencies and interests.
   - **Job Status Graph**: A comprehensive distribution chart showing your progress across different application stages (Applied, Interviewing, Offered, etc.).
-- **Smart Parsing**: Leverages AI to help you extract and organize job information efficiently.
+- **QoL Features**: Include date pickers, job status dropdowns, and dedicated spaces for notes.
 - **Data Export**: Export your job tracking data for offline use or reporting.
 
 
