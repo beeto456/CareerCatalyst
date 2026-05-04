@@ -1,20 +1,43 @@
 <div align="center">
-<img width="800" height="450" alt="GHBanner" src="[[https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6](https://merlinsfolio.wordpress.com/wp-content/uploads/2026/05/career1.jpg)](https://merlinsfolio.wordpress.com/wp-content/uploads/2026/05/career1.jpg)" />
+  <img width="800" alt="CareerCatalyst App Screenshot" src="https://merlinsfolio.wordpress.com/wp-content/uploads/2026/05/career1.jpg" />
 </div>
 
-# Run and deploy your AI Studio app
+# CareerCatalyst
 
-This contains everything you need to run your app locally.
+**[🚀 Try out the Live App Here](https://careercatalyst-191253016115.asia-southeast1.run.app/)**
 
-View your app in AI Studio: https://ai.studio/apps/d033b04b-20a7-42b4-938a-39349654023c
+## Overview
+CareerCatalyst is an interactive web application designed to help job seekers evaluate role compatibility and manage their application pipeline. Originally conceptualized to replace a cumbersome spreadsheet from a career coaching program, this app streamlines the evaluation process. It allows users to paste job descriptions and rate their competency and interest for each requirement, visualizing these averages on an interactive scatter graph to help users determine if they meet the baseline to thrive in the role.
+
+## The Challenge
+Job hunting is inherently stressful, especially when managing multiple applications across various portals. Most job seekers use basic spreadsheets or note-taking apps just to track their application status, which ignores a critical factor: objectively evaluating if the job is actually a good fit for their skills and long-term interests. Previously, doing this evaluation required copying job requirements line-by-line into a tedious Excel spreadsheet.
+
+**Problem Statement:** How might we create a tool that not only tracks job application statuses but also helps job seekers quickly and visually evaluate their compatibility with a role in a frictionless way?
+
+## The Solution & Key Features
+CareerCatalyst was developed to replace a manual workflow with an intuitive, centralized web interface. Key design decisions include:
+
+*   **Visual Opportunity Matrix:** Transforms 1-10 user ratings for 'Competency' and 'Interest' into a 2×2 scatter graph, providing an immediate visual indicator of whether a job is a strong match.
+*   **Streamlined Data Entry:** Designed to allow users to paste a full job description at once, significantly reducing the friction of line-by-line data entry required by the original Excel method.
+*   **Integrated Pipeline Tracking:** Added essential quality-of-life features in one view, including date pickers, job status dropdowns, and dedicated spaces for notes.
+*   **Frictionless Continuity:** Utilizes local browser storage to save data, allowing users to seamlessly return to their tracking pipeline without the immediate need for complex account setups or backend databases.
+
+## Tech Stack
+*   **AI Integration:** Advanced Generative AI via Google AI Studio
+*   **Environment:** Node.js
+
+---
 
 ## Run Locally
+This repository contains everything needed to run the app locally. 
 
-**Prerequisites:**  Node.js
-
+**Prerequisites:** Node.js
 
 1. Install dependencies:
-   `npm install`
+   ```bash
+   npm install
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+
