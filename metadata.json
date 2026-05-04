@@ -1,0 +1,6 @@
+{
+  "name": "CareerCatalyst",
+  "description": "A job tracker that helps you keep track of job descriptions, competencies and interests. It comes with a scatter graph and status distribution chart to visualize your data.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
