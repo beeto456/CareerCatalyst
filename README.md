@@ -28,6 +28,11 @@ CareerCatalyst was developed to replace a manual workflow with an intuitive, cen
 - **QoL Features**: Include date pickers, job status dropdowns, and dedicated spaces for notes.
 - **Data Export**: Export your job tracking data for offline use or reporting.
 
+## Limitations
+
+- **Desktop-Optimized**: The UI is currently optimized for desktop. Use on mobile devices may result in layout inconsistencies or a non-optimal user experience.
+- **Local Persistence**: All data is stored locally in your browser's `localStorage`. Clearing your browser cache or switching devices will result in a fresh state unless you manually export and import your data.
+- **No Cloud Sync**: There is currently no multi-user or cloud-syncing capability. Data is isolated to the specific browser instance where it was created.
 
 ## Tech Stack
 *   **AI Integration:** Advanced Generative AI via Google AI Studio
