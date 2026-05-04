@@ -4,8 +4,8 @@
 
 # CareerCatalyst
 
-**[🚀 Try out the Live App Here](https://careercatalyst-191253016115.asia-southeast1.run.app/)**
-**[📋 Share Your Feedback (User Research Survey)](https://docs.google.com/forms/d/e/1FAIpQLSf_bbLIGf424-sBJ1PQRQbwM15H3X4TYdQ2wmyVQ53-4s6Y-w/viewform)**
+**[🚀 Try out the Live App Here](https://careercatalyst-191253016115.asia-southeast1.run.app/)** <br>
+**[📋 Share Your Feedback (User Research Survey)](https://docs.google.com/forms/d/e/1FAIpQLSf_bbLIGf424-sBJ1PQRQbwM15H3X4TYdQ2wmyVQ53-4s6Y-w/viewform)** </br>
 
 ## Overview
 CareerCatalyst is an interactive web application designed to help job seekers evaluate role compatibility and manage their application pipeline. Originally conceptualized to replace a cumbersome spreadsheet from a career coaching program, this app streamlines the evaluation process. It allows users to paste job descriptions and rate their competency and interest for each requirement, visualizing these averages on an interactive scatter graph to help users determine if they meet the baseline to thrive in the role.
