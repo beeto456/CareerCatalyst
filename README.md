@@ -1,5 +1,5 @@
-<img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/9e65edf8-6b68-466c-91af-552da413a050" /><div align="center">
-<img width="800" height="450" alt="GHBanner" src="[https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6](https://merlinsfolio.wordpress.com/wp-content/uploads/2026/05/career1.jpg)" />
+<div align="center">
+<img width="800" height="450" alt="GHBanner" src="[[https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6](https://merlinsfolio.wordpress.com/wp-content/uploads/2026/05/career1.jpg)](https://merlinsfolio.wordpress.com/wp-content/uploads/2026/05/career1.jpg)" />
 </div>
 
 # Run and deploy your AI Studio app
