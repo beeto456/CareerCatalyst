@@ -7,6 +7,7 @@ import React, { useState, useMemo } from "react";
 import { 
   LogOut, 
   Download, 
+  Upload,
   LayoutDashboard, 
   Plus, 
   Trash2,
@@ -15,28 +16,40 @@ import {
   MessageSquare,
   ChevronUp,
   ChevronDown,
-  HelpCircle
+  HelpCircle,
+  BarChart2,
+  Calendar,
+  MapPin,
+  ExternalLink,
+  ShieldCheck,
+  User as UserIcon
 } from "lucide-react";
-import { JobApplication, UserProfile } from "../types";
+import { JobApplication, UserProfile, JobStatus } from "../types";
 import JobInput from "./JobInput";
 import JobChart from "./JobChart";
 import JobStatusGraph from "./JobStatusGraph";
 import JobTable from "./JobTable";
+import StatusFilterList from "./StatusFilterList";
 import { ParsedJob } from "../services/geminiService";
 import { cn } from "../lib/utils";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { useAuth } from "../context/AuthContext";
+import { logout } from "../lib/firebase";
 
 interface DashboardProps {
   applications: JobApplication[];
-  onAddJob: (parsed: ParsedJob) => JobApplication;
+  onAddJob: (parsed: ParsedJob) => Promise<JobApplication | null>;
   onUpdateJob: (id: string, updates: Partial<JobApplication>) => void;
   onDeleteJob: (id: string) => void;
   onReorderJob: (id: string, direction: "up" | "down") => void;
   onClearAll: () => void;
+  onImportData: (data: JobApplication[]) => void;
 }
+
+type Tab = "dashboard" | "add" | "status-explorer";
 
 export default function Dashboard({ 
   applications, 
@@ -44,10 +57,15 @@ export default function Dashboard({
   onUpdateJob, 
   onDeleteJob,
   onReorderJob,
-  onClearAll
+  onClearAll,
+  onImportData
 }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState<"dashboard" | "add">("dashboard");
+  const { userProfile } = useAuth();
+  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
   const [selectedJobId, setSelectedJobId] = useState<string | null>(applications[0]?.id || null);
+  const [explorerStatus, setExplorerStatus] = useState<JobStatus | "All">("All");
+  const [explorerSortBy, setExplorerSortBy] = useState<any>("overallScore");
+  const [explorerSortOrder, setExplorerSortOrder] = useState<"asc" | "desc">("desc");
 
   const selectedJob = useMemo(() => 
     applications.find(a => a.id === selectedJobId) || applications[0]
@@ -57,6 +75,18 @@ export default function Dashboard({
   const [isExcelExporting, setIsExcelExporting] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleSelectJob = (id: string) => {
+    setSelectedJobId(id);
+    setActiveTab("dashboard");
+    // Small delay to allow React to render the dashboard tab and job details if they weren't visible
+    setTimeout(() => {
+      const element = document.getElementById("active-job-details");
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
+  };
 
   const handleExportExcel = async () => {
     const element = document.getElementById("job-matrix-capture");
@@ -261,6 +291,38 @@ export default function Dashboard({
     }
   };
 
+  const handleExportJSON = () => {
+    const dataStr = JSON.stringify(applications, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    saveAs(blob, `Catalyst_Data_Backup_${new Date().toISOString().split('T')[0]}.json`);
+  };
+
+  const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!confirm("Importing data will replace your current entries. Continue?")) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string);
+        if (Array.isArray(json)) {
+          onImportData(json);
+          alert(`Successfully imported ${json.length} entries!`);
+        } else {
+          alert("Invalid file format. Expected a JSON array of applications.");
+        }
+      } catch (err) {
+        console.error("Import failed:", err);
+        alert("Failed to parse the file. Please ensure it's a valid JSON file.");
+      }
+    };
+    reader.readAsText(file);
+    // Reset input
+    e.target.value = "";
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans">
       {/* Sidebar */}
@@ -280,6 +342,18 @@ export default function Dashboard({
           >
             <LayoutDashboard className="w-4 h-4" />
             Dashboard
+          </button>
+          <button 
+            onClick={() => {
+              setActiveTab("status-explorer");
+            }}
+            className={cn(
+              "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all",
+              activeTab === "status-explorer" ? "bg-white/10 text-white shadow-inner" : "text-white/50 hover:text-white"
+            )}
+          >
+            <BarChart2 className="w-4 h-4" />
+            Status Explorer
           </button>
           <button 
             onClick={() => setActiveTab("add")}
@@ -359,10 +433,7 @@ export default function Dashboard({
                 </div>
 
                 <button
-                  onClick={() => {
-                    setSelectedJobId(app.id);
-                    setActiveTab("dashboard");
-                  }}
+                  onClick={() => handleSelectJob(app.id)}
                   className={cn(
                     "w-full text-left px-4 pl-8 py-3 rounded-xl text-xs flex flex-col gap-1 transition-all pr-12",
                     selectedJobId === app.id && activeTab === "dashboard" ? "bg-brand-accent text-white" : "text-white/60 hover:bg-white/5"
@@ -414,11 +485,56 @@ export default function Dashboard({
         </div>
 
         <div className="mt-auto border-t border-white/10 pt-6">
+          <div className="px-4 mb-4">
+            <h3 className="text-[10px] uppercase font-bold text-white/30 tracking-widest mb-3">Backup & Migration</h3>
+            <div className="flex flex-col gap-2">
+              <button 
+                onClick={handleExportJSON}
+                className="w-full flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold text-white/70 transition-all"
+                title="Export all data to a JSON file"
+              >
+                <Download className="w-3 h-3 text-brand-accent" />
+                Export JSON Backup
+              </button>
+              
+              <label className="w-full flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold text-white/70 transition-all cursor-pointer" title="Upload a JSON backup file">
+                <Upload className="w-3 h-3 text-emerald-400" />
+                Import JSON Backup
+                <input 
+                  type="file" 
+                  accept=".json" 
+                  onChange={handleImportJSON} 
+                  className="hidden" 
+                />
+              </label>
+            </div>
+          </div>
+
           <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+            <div className="flex items-center gap-3 mb-3">
+              {userProfile?.photoURL ? (
+                <img src={userProfile.photoURL} alt={userProfile.displayName} className="w-8 h-8 rounded-lg" referrerPolicy="no-referrer" />
+              ) : (
+                <div className="w-8 h-8 bg-brand-accent/20 rounded-lg flex items-center justify-center">
+                  <UserIcon className="w-4 h-4 text-brand-accent" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold truncate">{userProfile?.displayName}</p>
+                <p className="text-[9px] text-white/30 truncate">{userProfile?.email}</p>
+              </div>
+              <button 
+                onClick={() => logout()}
+                className="p-1.5 text-white/30 hover:text-white transition-colors"
+                title="Sign Out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
             <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-1">Status</p>
-            <p className="text-xs font-medium text-emerald-400 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Local Sync Active
+            <p className="text-xs font-medium text-brand-accent flex items-center gap-2">
+              <ShieldCheck className="w-3.5 h-3.5 animate-pulse" />
+              Cloud Synchronized
             </p>
           </div>
         </div>
@@ -430,11 +546,25 @@ export default function Dashboard({
         <div className="max-w-6xl mx-auto">
           {activeTab === "add" ? (
             <div className="max-w-4xl mx-auto py-12">
-              <JobInput onParsed={(parsed) => {
-                const newJob = onAddJob(parsed);
-                setSelectedJobId(newJob.id);
-                setActiveTab("dashboard");
+              <JobInput onParsed={async (parsed) => {
+                const newJob = await onAddJob(parsed);
+                if (newJob) {
+                  handleSelectJob(newJob.id);
+                }
               }} />
+            </div>
+          ) : activeTab === "status-explorer" ? (
+            <div className="py-6">
+              <StatusFilterList 
+                applications={applications}
+                onSelectJob={handleSelectJob}
+                selectedStatus={explorerStatus}
+                onStatusChange={setExplorerStatus}
+                sortBy={explorerSortBy}
+                onSortByChange={setExplorerSortBy}
+                sortOrder={explorerSortOrder}
+                onSortOrderChange={setExplorerSortOrder}
+              />
             </div>
           ) : (
             <div className="space-y-12">
@@ -494,7 +624,7 @@ export default function Dashboard({
               {/* Chart Section */}
               <JobChart 
                 applications={applications} 
-                onSelectJob={(job) => setSelectedJobId(job.id)} 
+                onSelectJob={(job) => handleSelectJob(job.id)} 
                 onDeleteJob={onDeleteJob}
                 onClearAll={onClearAll}
               />
@@ -510,13 +640,60 @@ export default function Dashboard({
                       <p className="text-sm text-gray-400 italic">Adjust the scores to update the matrix position in real-time. Data are automatically saved to your current browser, and you can continue where you left off even if you close this website.</p>
                       
                       <div className="mt-3 flex flex-wrap gap-4">
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
-                          <HelpCircle className="w-3 h-3 text-brand-accent" />
-                          <span>Competence: How good you are at this job</span>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-1">Overall Fit Score</span>
+                          <div className="flex items-center gap-2">
+                            <div className="text-3xl font-black text-brand-primary font-mono bg-white border border-gray-100 shadow-sm px-4 py-2 rounded-xl">
+                              {selectedJob.overallScore.toFixed(1)}
+                            </div>
+                            <div className="flex flex-col text-[10px] font-bold text-gray-400">
+                              <span>TOTAL</span>
+                              <span>AVERAGE</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
-                          <HelpCircle className="w-3 h-3 text-orange-500" />
-                          <span>Interest: How much you enjoy this job</span>
+
+                        <div className="h-12 w-px bg-gray-100 self-end mx-2 secret-md-block" />
+
+                        <div className="flex flex-col justify-end pb-1">
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50 px-2 py-1 rounded-md border border-gray-100 mb-2">
+                            <HelpCircle className="w-3 h-3 text-brand-accent" />
+                            <span>Competence: {selectedJob.avgCompetency.toFixed(1)}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                            <HelpCircle className="w-3 h-3 text-orange-500" />
+                            <span>Interest: {selectedJob.avgInterest.toFixed(1)}</span>
+                          </div>
+                        </div>
+
+                        {(selectedJob.applicationDate || selectedJob.workArrangement) && (
+                          <div className="h-12 w-px bg-gray-100 self-end mx-2 secret-md-block" />
+                        )}
+
+                        <div className="flex flex-col justify-end pb-1 gap-2">
+                          {selectedJob.applicationDate && (
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                              <Calendar className="w-3 h-3 text-gray-400" />
+                              <span>Applied: {new Date(selectedJob.applicationDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                            </div>
+                          )}
+                          {selectedJob.workArrangement && (
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                              <MapPin className="w-3 h-3 text-gray-400" />
+                              <span>Mode: {selectedJob.workArrangement}</span>
+                            </div>
+                          )}
+                          {selectedJob.url && (
+                            <a 
+                              href={selectedJob.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 text-[10px] font-bold text-brand-accent uppercase tracking-wider hover:underline mt-1"
+                            >
+                              <span>View Job Listing</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -546,7 +723,7 @@ export default function Dashboard({
           {/* Main Area Footer */}
           <footer className="mt-12 pt-6 border-t border-gray-100/50 pb-8">
             <p className="text-[9px] text-gray-400 font-medium">
-              Made by Merlin Cheng <span className="opacity-70">(<a href="https://www.linkedin.com/in/merlinkun/" target="_blank" rel="noopener noreferrer" className="hover:text-brand-primary underline transition-colors">LinkedIn</a> | <a href="https://merlinkun.figma.site/" target="_blank" rel="noopener noreferrer" className="hover:text-brand-primary underline transition-colors">Portfolio</a>)</span>, 2026. &nbsp; • &nbsp; Created using Google AI Studio. &nbsp; • &nbsp; App is in development (V 1.0). &nbsp; • &nbsp; Based on JD Review V6 Excel Sheet.
+              Made by Merlin Cheng <span className="opacity-70">(<a href="https://www.linkedin.com/in/merlinkun/" target="_blank" rel="noopener noreferrer" className="hover:text-brand-primary underline transition-colors">LinkedIn</a> | <a href="https://merlinkun.figma.site/" target="_blank" rel="noopener noreferrer" className="hover:text-brand-primary underline transition-colors">Portfolio</a>)</span>, 2026. &nbsp; • &nbsp; Created using Google AI Studio. &nbsp; • &nbsp; App is in development (V 1.1). &nbsp; • &nbsp; Based on JD Review V6 Excel Sheet.
             </p>
           </footer>
         </div>

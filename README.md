@@ -25,14 +25,14 @@ CareerCatalyst was developed to replace a manual workflow with an intuitive, cen
 - **Visual Analytics**: 
   - **Scatter Graph**: Visualize your job opportunities based on competencies and interests.
   - **Job Status Graph**: A comprehensive distribution chart showing your progress across different application stages (Applied, Interviewing, Offered, etc.).
+- **Status Explorer**: A dedicated page to filter and browse your job opportunities by their current application status, providing a focused view of your pipeline.
 - **QoL Features**: Include date pickers, job status dropdowns, and dedicated spaces for notes.
-- **Data Export**: Export your job tracking data for offline use or reporting.
+- **Data Export**: Export your job tracking data for offline use or reporting, either with Excel or JSON.
+- **Google Firebase Sync**: Cloud syncing via Google was added in version 1.1.
 
 ## Limitations
 
 - **Desktop-Optimized**: The UI is currently optimized for desktop. Use on mobile devices may result in layout inconsistencies or a non-optimal user experience.
-- **Local Persistence**: All data is stored locally in your browser's `localStorage`. Clearing your browser cache or switching devices will result in a fresh state unless you manually export and import your data.
-- **No Cloud Sync**: There is currently no multi-user or cloud-syncing capability. Data is isolated to the specific browser instance where it was created.
 
 ## Tech Stack
 *   **AI Integration:** Advanced Generative AI via Google AI Studio

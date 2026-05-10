@@ -197,6 +197,9 @@
 }
 
 @layer base {
+  html {
+    font-size: 17px;
+  }
   body {
     @apply font-sans bg-gray-50 text-gray-900;
   }

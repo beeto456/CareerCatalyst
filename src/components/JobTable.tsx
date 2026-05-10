@@ -93,8 +93,8 @@ export default function JobTable({ job, onUpdate, onDelete }: JobTableProps) {
     const newReq: JobRequirement = {
       id: crypto.randomUUID(),
       text: newRequirementText.trim(),
-      competencyScore: 5,
-      interestScore: 5
+      competencyScore: 0,
+      interestScore: 0
     };
 
     const updatedRequirements = [...job.requirements, newReq];
@@ -232,11 +232,6 @@ export default function JobTable({ job, onUpdate, onDelete }: JobTableProps) {
                 </div>
               )}
             </div>
-            {job.url && (
-              <a href={job.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-brand-accent transition-colors shrink-0 p-1">
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            )}
           </div>
         </div>
         
@@ -302,10 +297,10 @@ export default function JobTable({ job, onUpdate, onDelete }: JobTableProps) {
             <tr className="bg-white border-bottom border-gray-100 italic">
               <th className="px-6 py-4 text-[11px] font-medium text-gray-400 uppercase tracking-wider w-16 text-center">S/N</th>
               <th className="px-6 py-4 text-[11px] font-medium text-gray-400 uppercase tracking-wider">Job Requirement (Core Tasks)</th>
-              <th className="px-6 py-4 text-[11px] font-medium text-gray-400 uppercase tracking-wider w-44">
+              <th className="px-6 py-4 text-[11px] font-medium text-gray-400 uppercase tracking-wider w-44 text-center">
                 Competence (1-10)
               </th>
-              <th className="px-6 py-4 text-[11px] font-medium text-gray-400 uppercase tracking-wider w-44">
+              <th className="px-6 py-4 text-[11px] font-medium text-gray-400 uppercase tracking-wider w-44 text-center">
                 Interest (1-10)
               </th>
               <th className="px-6 py-4 text-[11px] font-medium text-gray-400 uppercase tracking-wider w-16"></th>
@@ -314,14 +309,20 @@ export default function JobTable({ job, onUpdate, onDelete }: JobTableProps) {
           <tbody className="font-mono text-sm">
             {job.requirements.map((req, index) => (
               <tr key={req.id} className="border-bottom border-gray-50 hover:bg-gray-100 transition-colors group">
-                <td className="px-6 py-4 text-gray-400 group-hover:text-gray-900 transition-colors uppercase text-center">{String(index + 1).padStart(2, '0')}</td>
-                <td className="px-6 py-4 font-sans font-medium text-gray-700 leading-relaxed">
+                <td className="px-6 py-4 text-gray-400 group-hover:text-gray-900 transition-colors uppercase text-center align-middle">{String(index + 1).padStart(2, '0')}</td>
+                <td className="px-6 py-4 font-sans font-medium text-gray-700 leading-relaxed align-middle">
                   <textarea
                     value={req.text}
                     onChange={(e) => handleRequirementTextChange(req.id, e.target.value)}
                     rows={1}
-                    className="w-full bg-transparent border-none focus:ring-0 resize-none p-0 focus:outline-none"
-                    style={{ height: 'auto', minHeight: '1.5em' }}
+                    className="w-full bg-transparent border-none focus:ring-0 resize-none p-0 focus:outline-none overflow-hidden"
+                    style={{ height: 'auto' }}
+                    ref={(el) => {
+                      if (el) {
+                        el.style.height = 'auto';
+                        el.style.height = `${el.scrollHeight}px`;
+                      }
+                    }}
                     onInput={(e) => {
                       const target = e.target as HTMLTextAreaElement;
                       target.style.height = 'auto';
@@ -329,30 +330,30 @@ export default function JobTable({ job, onUpdate, onDelete }: JobTableProps) {
                     }}
                   />
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 text-center align-middle">
                   <input 
                     type="number" 
-                    min="1" 
+                    min="0" 
                     max="10"
                     value={req.competencyScore}
                     onChange={(e) => handleRequirementScore(req.id, 'competencyScore', Number(e.target.value))}
-                    className="w-16 px-3 py-2 bg-transparent border border-transparent hover:border-gray-200 focus:border-brand-accent focus:bg-white rounded transition-all text-center font-bold text-brand-accent"
+                    className="w-16 px-3 py-2 bg-transparent border border-transparent hover:border-gray-200 focus:border-brand-accent focus:bg-white rounded transition-all text-center font-bold text-brand-accent mx-auto"
                   />
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 text-center align-middle">
                   <input 
                     type="number" 
-                    min="1" 
+                    min="0" 
                     max="10"
                     value={req.interestScore}
                     onChange={(e) => handleRequirementScore(req.id, 'interestScore', Number(e.target.value))}
-                    className="w-16 px-3 py-2 bg-transparent border border-transparent hover:border-gray-200 focus:border-brand-accent focus:bg-white rounded transition-all text-center font-bold text-orange-500"
+                    className="w-16 px-3 py-2 bg-transparent border border-transparent hover:border-gray-200 focus:border-brand-accent focus:bg-white rounded transition-all text-center font-bold text-orange-500 mx-auto"
                   />
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 align-middle">
                    <button 
                     onClick={() => handleDeleteRequirement(req.id)}
-                    className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded transition-all opacity-0 group-hover:opacity-100"
+                    className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded transition-all opacity-40 group-hover:opacity-100"
                     title="Remove requirement"
                    >
                      <Trash2 className="w-3.5 h-3.5" />
@@ -414,19 +415,24 @@ export default function JobTable({ job, onUpdate, onDelete }: JobTableProps) {
           </tbody>
           <tfoot className="bg-gray-100 font-mono text-sm border-top border-gray-100">
             <tr className="font-bold">
-              <td className="px-6 py-6" colSpan={2}>
+              <td className="px-6 py-4" colSpan={2}>
                 <div className="flex items-center gap-2 font-sans italic text-gray-400">
                   <Info className="w-4 h-4" />
                   <span>Your Calculated Averages</span>
                 </div>
               </td>
-              <td className="px-6 py-6 text-xl text-brand-accent tabular-nums">
+              <td className="px-6 py-4 text-xl text-brand-accent tabular-nums text-center align-middle">
                 {job.avgCompetency.toFixed(1)}
               </td>
-              <td className="px-6 py-6 text-xl text-orange-500 tabular-nums">
+              <td className="px-6 py-4 text-xl text-orange-500 tabular-nums text-center align-middle">
                 {job.avgInterest.toFixed(1)}
               </td>
-              <td className="px-6 py-6"></td>
+              <td className="px-6 py-4 border-l border-gray-200 bg-gray-200/20 text-center align-middle">
+                <div className="flex flex-col items-center">
+                  <span className="text-[8px] uppercase text-gray-500 mb-0.5">Overall</span>
+                  <span className="text-2xl text-brand-primary">{job.overallScore.toFixed(1)}</span>
+                </div>
+              </td>
             </tr>
           </tfoot>
         </table>

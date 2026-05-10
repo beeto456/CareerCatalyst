@@ -1,0 +1,68 @@
+{
+  "entities": {
+    "JobApplication": {
+      "title": "Job Application",
+      "description": "Represents a job application opportunity tracked by the user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "company": { "type": "string" },
+        "url": { "type": "string" },
+        "sourceType": { "type": "string", "enum": ["URL", "Manual Input"] },
+        "applicationDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string" },
+        "interviewMethod": { "type": "string" },
+        "interviewDate": { "type": "string" },
+        "interviewDate2": { "type": "string" },
+        "salaryTarget": { "type": "string" },
+        "salaryPosted": { "type": "string" },
+        "followUpDate": { "type": "string" },
+        "workArrangement": { "type": "string" },
+        "officeLocation": { "type": "string" },
+        "notes": { "type": "string" },
+        "requirements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "text": { "type": "string" },
+              "competencyScore": { "type": "number" },
+              "interestScore": { "type": "number" }
+            }
+          }
+        },
+        "avgCompetency": { "type": "number" },
+        "avgInterest": { "type": "number" },
+        "overallScore": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "userId", "title", "company", "status", "createdAt", "updatedAt"]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Public user profile information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" }
+      },
+      "required": ["uid", "displayName", "email"]
+    }
+  },
+  "firestore": {
+    "applications": {
+      "schema": { "$ref": "#/entities/JobApplication" },
+      "description": "Collection of job applications."
+    },
+    "users": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Collection of user profile data."
+    }
+  }
+}
