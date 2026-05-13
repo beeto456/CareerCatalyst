@@ -47,6 +47,8 @@ interface DashboardProps {
   onReorderJob: (id: string, direction: "up" | "down") => void;
   onClearAll: () => void;
   onImportData: (data: JobApplication[]) => void;
+  onExitGuestMode?: () => void;
+  isGuestMode?: boolean;
 }
 
 type Tab = "dashboard" | "add" | "status-explorer";
@@ -58,7 +60,9 @@ export default function Dashboard({
   onDeleteJob,
   onReorderJob,
   onClearAll,
-  onImportData
+  onImportData,
+  onExitGuestMode,
+  isGuestMode
 }: DashboardProps) {
   const { userProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
@@ -329,7 +333,7 @@ export default function Dashboard({
       <aside className="w-full md:w-80 bg-brand-primary text-white flex flex-col p-6 shrink-0 h-screen sticky top-0 overflow-y-auto">
         <div className="flex items-center gap-3 mb-10">
           <div className="w-8 h-8 bg-brand-accent rounded-lg rotate-12 flex items-center justify-center font-bold text-lg italic">C</div>
-          <h1 className="font-bold text-xl tracking-tight">Catalyst</h1>
+          <h1 className="font-bold text-xl tracking-tight">CareerCatalyst</h1>
         </div>
 
         <nav className="flex-1 space-y-2">
@@ -513,28 +517,43 @@ export default function Dashboard({
           <div className="p-4 bg-white/5 rounded-xl border border-white/10">
             <div className="flex items-center gap-3 mb-3">
               {userProfile?.photoURL ? (
-                <img src={userProfile.photoURL} alt={userProfile.displayName} className="w-8 h-8 rounded-lg" referrerPolicy="no-referrer" />
+                <img src={userProfile.photoURL} alt={userProfile.displayName || "User"} className="w-8 h-8 rounded-lg" referrerPolicy="no-referrer" />
               ) : (
                 <div className="w-8 h-8 bg-brand-accent/20 rounded-lg flex items-center justify-center">
                   <UserIcon className="w-4 h-4 text-brand-accent" />
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold truncate">{userProfile?.displayName}</p>
-                <p className="text-[9px] text-white/30 truncate">{userProfile?.email}</p>
+                <p className="text-xs font-bold truncate">{userProfile?.displayName || (isGuestMode ? "Guest User" : "Anonymous")}</p>
+                <p className="text-[9px] text-white/30 truncate">{userProfile?.email || (isGuestMode ? "Local Session" : "")}</p>
               </div>
               <button 
-                onClick={() => logout()}
+                onClick={() => {
+                  if (isGuestMode && onExitGuestMode) {
+                    onExitGuestMode();
+                  } else {
+                    logout();
+                  }
+                }}
                 className="p-1.5 text-white/30 hover:text-white transition-colors"
-                title="Sign Out"
+                title={isGuestMode ? "Exit Guest Mode" : "Sign Out"}
               >
                 <LogOut className="w-3.5 h-3.5" />
               </button>
             </div>
             <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-1">Status</p>
-            <p className="text-xs font-medium text-brand-accent flex items-center gap-2">
-              <ShieldCheck className="w-3.5 h-3.5 animate-pulse" />
-              Cloud Synchronized
+            <p className={cn("text-xs font-medium flex items-center gap-2", isGuestMode ? "text-orange-400" : "text-brand-accent")}>
+              {isGuestMode ? (
+                <>
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  Local Memory Mode
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-3.5 h-3.5 animate-pulse" />
+                  Cloud Synchronized
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -637,7 +656,12 @@ export default function Dashboard({
                   <div className="flex flex-col gap-2 mb-8">
                     <div>
                       <h3 className="text-2xl font-bold tracking-tight mb-2">Detail Analysis</h3>
-                      <p className="text-sm text-gray-400 italic">Adjust the scores to update the matrix position in real-time. Data are automatically saved to your current browser, and you can continue where you left off even if you close this website.</p>
+                      <p className="text-sm text-gray-400 italic">
+                        {isGuestMode 
+                          ? "In Guest Mode, your data is stored in your browser's local storage only. Login to sync across devices."
+                          : "Adjust the scores to update the matrix position in real-time. Data are automatically saved to your cloud account."
+                        }
+                      </p>
                       
                       <div className="mt-3 flex flex-wrap gap-4">
                         <div className="flex flex-col">
@@ -723,7 +747,7 @@ export default function Dashboard({
           {/* Main Area Footer */}
           <footer className="mt-12 pt-6 border-t border-gray-100/50 pb-8">
             <p className="text-[9px] text-gray-400 font-medium">
-              Made by Merlin Cheng <span className="opacity-70">(<a href="https://www.linkedin.com/in/merlinkun/" target="_blank" rel="noopener noreferrer" className="hover:text-brand-primary underline transition-colors">LinkedIn</a> | <a href="https://merlinkun.figma.site/" target="_blank" rel="noopener noreferrer" className="hover:text-brand-primary underline transition-colors">Portfolio</a>)</span>, 2026. &nbsp; • &nbsp; Created using Google AI Studio. &nbsp; • &nbsp; App is in development (V 1.1). &nbsp; • &nbsp; Based on JD Review V6 Excel Sheet.
+              Made by Merlin Cheng <span className="opacity-70">(<a href="https://www.linkedin.com/in/merlinkun/" target="_blank" rel="noopener noreferrer" className="hover:text-brand-primary underline transition-colors">LinkedIn</a> | <a href="https://merlinkun.figma.site/" target="_blank" rel="noopener noreferrer" className="hover:text-brand-primary underline transition-colors">Portfolio</a>)</span>, 2026. &nbsp; • &nbsp; Created using Google AI Studio. &nbsp; • &nbsp; App is in development (V1.1.1). &nbsp; • &nbsp; Based on JD Review V6 Excel Sheet.
             </p>
           </footer>
         </div>

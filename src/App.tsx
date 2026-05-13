@@ -35,6 +35,7 @@ const STORAGE_KEY = "career_catalyst_data";
 
 export default function App() {
   const { user, loading: authLoading } = useAuth();
+  const [isGuestMode, setIsGuestMode] = useState(false);
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMigrating, setIsMigrating] = useState(false);
@@ -43,21 +44,41 @@ export default function App() {
   useEffect(() => {
     if (authLoading) return;
 
-    if (!user) {
+    if (!user && !isGuestMode) {
       setApplications([]);
+      setLoading(false);
+      return;
+    }
+
+    if (isGuestMode) {
+      const local = localStorage.getItem(STORAGE_KEY);
+      if (local) {
+        try {
+          const parsed = JSON.parse(local);
+          setApplications(Array.isArray(parsed) ? parsed : []);
+        } catch (e) {
+          console.error("Local data parse error:", e);
+          setApplications([]);
+        }
+      }
       setLoading(false);
       return;
     }
 
     const q = query(
       collection(db, "applications"),
-      where("userId", "==", user.uid)
+      where("userId", "==", user!.uid)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const apps = snapshot.docs.map(doc => ({
-        ...doc.data() as JobApplication
-      })).sort((a, b) => b.createdAt - a.createdAt);
+      const apps = snapshot.docs.map(doc => {
+        const data = doc.data() as JobApplication;
+        // Migration: Handle old status name for 'Withdrawn'
+        if ((data.status as any) === 'Withdrawn') {
+          return { ...data, status: JobStatus.WITHDRAWN };
+        }
+        return data;
+      }).sort((a, b) => b.createdAt - a.createdAt);
       
       setApplications(apps);
       setLoading(false);
@@ -114,7 +135,7 @@ export default function App() {
   };
 
   const handleAddJob = async (parsed: ParsedJob): Promise<JobApplication | null> => {
-    if (!user) return null;
+    if (!user && !isGuestMode) return null;
 
     const newJobId = crypto.randomUUID();
     const now = Date.now();
@@ -128,7 +149,7 @@ export default function App() {
 
     const newJob: JobApplication = {
       id: newJobId,
-      userId: user.uid,
+      userId: user?.uid || "guest",
       title: parsed.title,
       company: parsed.company,
       url: parsed.url,
@@ -143,6 +164,13 @@ export default function App() {
       updatedAt: now
     };
 
+    if (isGuestMode) {
+      const updated = [newJob, ...applications];
+      setApplications(updated);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return newJob;
+    }
+
     try {
       await setDoc(doc(db, "applications", newJobId), newJob);
       return newJob;
@@ -153,6 +181,15 @@ export default function App() {
   };
 
   const handleUpdateJob = async (id: string, updates: Partial<JobApplication>) => {
+    if (isGuestMode) {
+      const updated = applications.map(app => 
+        app.id === id ? { ...app, ...updates, updatedAt: Date.now() } : app
+      );
+      setApplications(updated);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return;
+    }
+
     try {
       await updateDoc(doc(db, "applications", id), {
         ...updates,
@@ -166,6 +203,13 @@ export default function App() {
   const handleDeleteJob = async (id: string) => {
     // Note: Dashboard and JobTable already have UI-level confirmations.
     // Removing browser confirm() to avoid blocking in iframe environments.
+    if (isGuestMode) {
+      const updated = applications.filter(app => app.id !== id);
+      setApplications(updated);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return;
+    }
+
     try {
       await deleteDoc(doc(db, "applications", id));
     } catch (error) {
@@ -174,6 +218,19 @@ export default function App() {
   };
 
   const handleReorderJob = async (id: string, direction: "up" | "down") => {
+    if (isGuestMode) {
+      const index = applications.findIndex(app => app.id === id);
+      if (index === -1) return;
+      
+      const newIndex = direction === 'up' ? index - 1 : index + 1;
+      if (newIndex < 0 || newIndex >= applications.length) return;
+      
+      const updated = [...applications];
+      [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
+      setApplications(updated);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return;
+    }
     // Reordering in Firestore is complex if we rely on createdAt.
     // For now, let's just swap createdAt if needed, but simple reorder is tricky with real-time sync.
     // We'll leave it as a local-only or sophisticated implementation later.
@@ -182,9 +239,15 @@ export default function App() {
   };
 
   const handleClearAll = async () => {
-    if (!user || applications.length === 0) return;
+    if ((!user && !isGuestMode) || applications.length === 0) return;
     
     // Note: Dashboard already has UI-level confirmation.
+    if (isGuestMode) {
+      setApplications([]);
+      localStorage.removeItem(STORAGE_KEY);
+      return;
+    }
+
     try {
       const batch = writeBatch(db);
       applications.forEach(app => {
@@ -197,7 +260,14 @@ export default function App() {
   };
 
   const handleImportData = async (data: JobApplication[]) => {
-    if (!user) return;
+    if (!user && !isGuestMode) return;
+
+    if (isGuestMode) {
+      setApplications(data);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      return;
+    }
+
     try {
       const batch = writeBatch(db);
       data.forEach(app => {
@@ -206,7 +276,7 @@ export default function App() {
         batch.set(appRef, {
           ...app,
           id: newId,
-          userId: user.uid
+          userId: user!.uid
         });
       });
       await batch.commit();
@@ -226,8 +296,8 @@ export default function App() {
     );
   }
 
-  if (!user) {
-    return <Landing />;
+  if (!user && !isGuestMode) {
+    return <Landing onGuestMode={() => setIsGuestMode(true)} />;
   }
 
   return (
@@ -239,6 +309,8 @@ export default function App() {
       onReorderJob={handleReorderJob}
       onClearAll={handleClearAll}
       onImportData={handleImportData}
+      isGuestMode={isGuestMode}
+      onExitGuestMode={() => setIsGuestMode(false)}
     />
   );
 }

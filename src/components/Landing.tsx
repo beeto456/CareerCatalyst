@@ -3,7 +3,11 @@ import { LogIn, Rocket, Shield, Zap, Globe } from 'lucide-react';
 import { loginWithGoogle } from '../lib/firebase';
 import { motion } from 'motion/react';
 
-export default function Landing() {
+interface LandingProps {
+  onGuestMode: () => void;
+}
+
+export default function Landing({ onGuestMode }: LandingProps) {
   return (
     <div className="min-h-screen bg-brand-secondary selection:bg-brand-accent selection:text-white font-sans overflow-hidden">
       {/* Background blobs for mood */}
@@ -18,7 +22,7 @@ export default function Landing() {
             <Rocket className="w-6 h-6 text-brand-accent animate-bounce" />
           </div>
           <div>
-            <span className="text-2xl font-black tracking-tighter text-brand-primary">CATALYST</span>
+            <span className="text-2xl font-black tracking-tighter text-brand-primary uppercase">CareerCatalyst</span>
             <div className="h-1 w-full bg-brand-accent rounded-full -mt-1 opacity-50" />
           </div>
         </div>
@@ -42,18 +46,24 @@ export default function Landing() {
               Momentum.
             </h1>
             <p className="text-xl text-brand-primary/60 max-w-lg font-medium leading-relaxed">
-              Stop drowning in spreadsheets. Catalyst intelligently tracks, scores, and optimizes your job search pipeline in real-time.
+              Stop drowning in spreadsheets. Catalyst intelligently tracks, scores, and organizes your application pipeline in real-time.
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-5">
             <button 
               onClick={loginWithGoogle}
-              className="group relative flex items-center justify-center gap-4 bg-brand-primary text-white px-10 py-6 rounded-3xl text-xl font-black shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="group relative flex items-center justify-center gap-4 bg-brand-primary text-white px-10 py-6 rounded-3xl text-xl font-black shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all flex-1"
             >
               <div className="absolute inset-0 bg-brand-accent opacity-0 group-hover:opacity-10 rounded-3xl transition-opacity" />
               <LogIn className="w-6 h-6 text-brand-accent" />
-              Secure Login with Google
+              Login with Google
+            </button>
+            <button 
+              onClick={onGuestMode}
+              className="px-10 py-6 rounded-3xl text-xl font-black border-4 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white transition-all active:scale-[0.98] flex-1"
+            >
+              Try as Guest
             </button>
           </div>
 
@@ -70,7 +80,7 @@ export default function Landing() {
                 <Shield className="w-5 h-5 text-brand-accent" />
                 <span className="text-sm font-bold text-brand-primary uppercase tracking-wider">Privacy First</span>
               </div>
-              <p className="text-sm text-brand-primary/40 font-medium leading-tight">Your search data is encrypted and visible only to you.</p>
+              <p className="text-sm text-brand-primary/40 font-medium leading-tight">Your application data is encrypted and visible only to you.</p>
             </div>
           </div>
         </motion.div>
@@ -106,8 +116,8 @@ export default function Landing() {
           
           <div className="absolute -bottom-10 -left-10 bg-brand-accent text-white p-8 rounded-3xl shadow-2xl transform -rotate-6">
             <Zap className="w-8 h-8 mb-4 " />
-            <p className="text-2xl font-black -tracking-tighter">10x Faster Search</p>
-            <p className="text-white/60 text-xs font-bold uppercase tracking-widest mt-2">AI-Powered Optimization</p>
+            <p className="text-2xl font-black -tracking-tighter">Efficient Tracking</p>
+            <p className="text-white/60 text-xs font-bold uppercase tracking-widest mt-2">Smart Application Scoring</p>
           </div>
         </motion.div>
       </main>

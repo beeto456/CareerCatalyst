@@ -30,8 +30,9 @@ export default function JobStatusGraph({ applications }: JobStatusGraphProps) {
     { label: 'Interviewing', value: JobStatus.INTERVIEWING },
     { label: 'Offered', value: JobStatus.OFFERED },
     { label: 'Rejected', value: JobStatus.REJECTED },
-    { label: 'Withdrawn', value: JobStatus.WITHDRAWN },
+    { label: 'Withdrawn/Expired', value: JobStatus.WITHDRAWN },
     { label: 'Ghosted', value: JobStatus.GHOSTED },
+    { label: 'No Interest', value: JobStatus.NO_LONGER_INTERESTED },
   ];
 
   const data = statusOrder.map(status => {
@@ -52,6 +53,7 @@ export default function JobStatusGraph({ applications }: JobStatusGraphProps) {
       case JobStatus.APPLIED: return '#f59e0b'; // Amber
       case JobStatus.GHOSTED: return '#6b7280'; // Gray
       case JobStatus.WITHDRAWN: return '#94a3b8'; // Slate
+      case JobStatus.NO_LONGER_INTERESTED: return '#475569'; // Dark Slate
       default: return '#e2e8f0'; // Base
     }
   };

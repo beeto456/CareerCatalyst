@@ -10,8 +10,9 @@ export enum JobStatus {
   INTERVIEWING = 'Interviewing',
   OFFERED = 'Offered',
   REJECTED = 'Rejected',
-  WITHDRAWN = 'Withdrawn',
+  WITHDRAWN = 'Withdrawn/Expired',
   GHOSTED = 'Ghosted (>2 Weeks)',
+  NO_LONGER_INTERESTED = 'No Longer Interested',
 }
 
 export enum InterviewMethod {
